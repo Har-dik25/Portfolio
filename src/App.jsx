@@ -1,969 +1,481 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import anime from 'animejs';
 import './index.css';
 
-const AnimeGridBackground = () => {
-    const wrapperRef = useRef(null);
+/* ─────────────────────────────────────────────────────────────
+   THE ANIME CHARACTER SVG  — cycles through 7 color styles
+   Larger, more detailed, exactly like the video screenshots
+───────────────────────────────────────────────────────────── */
+const AnimeChar = ({ style }) => (
+  <svg viewBox="0 0 260 520" xmlns="http://www.w3.org/2000/svg" className="char-svg" style={style}>
+    {/* ── Hair ── */}
+    <path d="M75 105 C55 75 58 38 70 22 C80 8 92 14 98 28 C102 12 108 4 120 2 C132 0 138 14 140 26 C145 8 153 1 165 4 C180 9 183 38 175 68 C188 50 202 52 198 82 C194 94 184 94 178 83 C183 98 172 106 162 96 C168 108 148 118 142 104 C136 116 116 112 121 99 C109 112 96 104 100 90 C87 95 76 86 75 105Z" fill="#1c1c1c"/>
+    {/* ── Head ── */}
+    <ellipse cx="130" cy="110" rx="50" ry="58" fill="#2c2c2c"/>
+    {/* ── Ear left/right ── */}
+    <ellipse cx="80"  cy="112" rx="8" ry="11" fill="#2c2c2c"/>
+    <ellipse cx="180" cy="112" rx="8" ry="11" fill="#2c2c2c"/>
+    {/* ── Neck ── */}
+    <rect x="115" y="162" width="30" height="28" rx="4" fill="#2a2a2a"/>
+    {/* ── Collar / suit ── */}
+    <path d="M60 186 L130 192 L200 186 L216 212 L178 232 L148 208 L130 222 L112 208 L82 232 L44 212Z" fill="#1e1e1e"/>
+    {/* ── Suit jacket body ── */}
+    <path d="M44 212 L32 430 L88 440 L116 345 L130 368 L144 345 L172 440 L228 430 L216 212 L178 232 L148 208 L130 222 L112 208 L82 232Z" fill="#232323"/>
+    {/* ── Suit lapels ── */}
+    <path d="M130 192 L102 242 L122 302 L130 282Z" fill="#2a2a2a"/>
+    <path d="M130 192 L158 242 L138 302 L130 282Z" fill="#2a2a2a"/>
+    {/* ── Shirt/tie under ── */}
+    <path d="M122 222 L130 222 L138 222 L134 260 L130 272 L126 260Z" fill="#333"/>
+    <path d="M130 240 L124 255 L130 268 L136 255Z" fill="#1a1a1a"/>
+    {/* ── Left arm ── */}
+    <path d="M44 212 L12 368 L38 378 L72 262Z" fill="#232323"/>
+    {/* ── Right arm ── */}
+    <path d="M216 212 L248 368 L222 378 L188 262Z" fill="#232323"/>
+    {/* ── Left hand ── */}
+    <ellipse cx="24" cy="382" rx="14" ry="18" fill="#2a2a2a"/>
+    {/* ── Right hand ── */}
+    <ellipse cx="236" cy="382" rx="14" ry="18" fill="#2a2a2a"/>
+    {/* ── Trouser legs ── */}
+    <path d="M88 440 L76 518 L110 520 L130 448 L150 520 L184 518 L172 440Z" fill="#1e1e1e"/>
+    {/* ── Suit badge/star ── */}
+    <circle cx="130" cy="392" r="20" fill="#1a1a1a" stroke="#383838" strokeWidth="1.5"/>
+    <path d="M130 376 L134 386 L145 386 L136 393 L139 404 L130 398 L121 404 L124 393 L115 386 L126 386Z" fill="#404040"/>
+    {/* ── Glasses frames ── */}
+    <circle cx="108" cy="116" r="21" fill="none" stroke="#4a4a4a" strokeWidth="2.8"/>
+    <circle cx="152" cy="116" r="21" fill="none" stroke="#4a4a4a" strokeWidth="2.8"/>
+    <line x1="129" y1="116" x2="131" y2="116" stroke="#4a4a4a" strokeWidth="2.5"/>
+    <path d="M87 116 C81 110 75 106 68 104" stroke="#4a4a4a" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+    <path d="M173 116 C179 110 185 106 192 104" stroke="#4a4a4a" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+    {/* ── Eyes ── */}
+    <ellipse cx="108" cy="118" rx="11" ry="13" fill="#111"/>
+    <ellipse cx="152" cy="118" rx="11" ry="13" fill="#111"/>
+    <ellipse cx="110" cy="115" rx="4"  ry="5"  fill="#2a2a2a"/>
+    <ellipse cx="154" cy="115" rx="4"  ry="5"  fill="#2a2a2a"/>
+    {/* ── Eyebrows ── */}
+    <path d="M91 96 L106 93"  stroke="#3a3a3a" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M154 93 L169 96" stroke="#3a3a3a" strokeWidth="2" strokeLinecap="round"/>
+    {/* ── Mouth ── */}
+    <path d="M118 142 Q130 149 142 142" stroke="#3a3a3a" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+    {/* ── Nose ── */}
+    <path d="M126 128 Q130 136 134 128" stroke="#3a3a3a" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+  </svg>
+);
 
-    useEffect(() => {
-        const wrapper = wrapperRef.current;
-        if (!wrapper) return;
+/* ─────────────────────────────────────────────────────────────
+   HERO SECTION
+───────────────────────────────────────────────────────────── */
+const Hero = () => {
+  const [idx, setIdx] = useState(0);
+  const [fading, setFading] = useState(false);
 
-        let columns = 0;
-        let rows = 0;
-        let toggled = false;
+  /* 7 filter states — one per "costume" cycle */
+  const filters = [
+    'none',
+    'sepia(1) hue-rotate(330deg) saturate(3.5) brightness(0.65)',   // red/samurai
+    'sepia(0.9) hue-rotate(10deg) saturate(2.5) brightness(0.75)',  // warm brown
+    'grayscale(0.5) contrast(1.4) brightness(0.7)',                 // dark mono
+    'sepia(0.6) hue-rotate(180deg) saturate(2) brightness(0.7)',    // blue night
+    'sepia(0.7) hue-rotate(80deg) saturate(2.5) brightness(0.7)',   // green cyber
+    'invert(0.1) contrast(1.3) brightness(0.75)',                   // ghost
+  ];
 
-        const handleResize = () => {
-            columns = Math.floor(window.innerWidth / 50);
-            rows = Math.floor(window.innerHeight / 50);
+  /* cycle every 2.2 s with a crossfade */
+  useEffect(() => {
+    const id = setInterval(() => {
+      setFading(true);
+      setTimeout(() => { setIdx(i => (i + 1) % filters.length); setFading(false); }, 350);
+    }, 2200);
+    return () => clearInterval(id);
+  }, []);
 
-            wrapper.style.setProperty('--columns', columns);
-            wrapper.style.setProperty('--rows', rows);
+  /* entrance */
+  useEffect(() => {
+    anime({ targets: '.hero-text', opacity: [0, 1], translateX: [60, 0], duration: 1200, delay: 400, easing: 'easeOutExpo' });
+    anime({ targets: '.char-wrap', opacity: [0, 1], translateY: [50, 0], duration: 1100, delay: 600, easing: 'easeOutExpo' });
+    anime({ targets: '.hero-btns', opacity: [0, 1], translateY: [20, 0], duration: 800, delay: 1100, easing: 'easeOutExpo' });
+    /* infinite float */
+    setTimeout(() => anime({ targets: '.char-wrap', translateY: [0, -12, 0], duration: 4500, loop: true, easing: 'easeInOutSine' }), 2000);
+  }, []);
 
-            createGrid();
-        };
+  return (
+    <section id="home" className="hero">
+      {/* Giant faint text — starts center and goes off screen right */}
+      <h1 className="hero-text">Hi! I'm Hardik</h1>
 
-        const createGrid = () => {
-            wrapper.innerHTML = '';
-            const quantity = columns * rows;
-            for (let i = 0; i < quantity; i++) {
-                const block = document.createElement('div');
-                block.classList.add('dot');
-                block.addEventListener('click', () => handleRipple(i));
-                wrapper.appendChild(block);
-            }
-        };
+      {/* Character — center-right of viewport, in front of text */}
+      <div className={`char-wrap${fading ? ' char-fade' : ''}`} style={{ opacity: 0 }}>
+        <AnimeChar style={{ filter: filters[idx], transition: 'filter 0.35s ease' }} />
+        <div className="char-glow" />
+      </div>
 
-        const handleRipple = (index) => {
-            toggled = !toggled;
-            anime({
-                targets: '.dot',
-                scale: [
-                    { value: 1.5, easing: 'easeOutSine', duration: 400 },
-                    { value: 1, easing: 'easeInOutQuad', duration: 900 }
-                ],
-                backgroundColor: [
-                    { value: toggled ? 'rgba(124, 58, 237, 0.6)' : 'rgba(6, 182, 212, 0.6)', easing: 'easeOutSine', duration: 400 },
-                    { value: 'rgba(255, 255, 255, 0.02)', easing: 'easeInOutQuad', duration: 900 }
-                ],
-                delay: anime.stagger(50, { grid: [columns, rows], from: index })
-            });
-        };
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-
-        // trigger initial pulse
-        setTimeout(() => handleRipple(Math.floor((columns * rows) / 2)), 1200);
-
-        // Infinite random ripple every 5 seconds
-        const autoRipple = setInterval(() => {
-            handleRipple(Math.floor(Math.random() * (columns * rows)));
-        }, 5000);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            clearInterval(autoRipple);
-        };
-    }, []);
-
-    return <div ref={wrapperRef} className="anime-grid-background"></div>;
+      {/* Bottom-left buttons */}
+      <div className="hero-btns" style={{ opacity: 0 }}>
+        <button className="hbtn" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}>Contact</button>
+        <button className="hbtn" onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}>Who i'm</button>
+      </div>
+    </section>
+  );
 };
 
-const App = () => {
-    const [scrolled, setScrolled] = useState(false);
-    const [scrollProgress, setScrollProgress] = useState(0);
+/* ─────────────────────────────────────────────────────────────
+   NAV — dark pill, full-width capsule
+───────────────────────────────────────────────────────────── */
+const Nav = () => {
+  const [active, setActive] = useState('home');
+  const [mob, setMob] = useState(false);
 
-    // Navbar scroll effect
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 50);
-
-            // Calculate scroll progress for top progress bar
-            const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            const scrolled = (winScroll / height) * 100;
-            setScrollProgress(scrolled);
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    // Initial load animations
-    useEffect(() => {
-        const timeline = anime.timeline({
-            easing: 'easeOutExpo',
-        });
-
-        timeline
-            .add({
-                targets: '.navbar',
-                translateY: [-50, 0],
-                opacity: [0, 1],
-                duration: 1000,
-            })
-            .add({
-                targets: '.shape',
-                scale: [0, 1],
-                opacity: [0, 0.4],
-                duration: 1500,
-                delay: anime.stagger(200),
-            }, '-=800')
-            .add({
-                targets: '.hero-anim',
-                translateY: [30, 0],
-                opacity: [0, 1],
-                duration: 1200,
-                delay: anime.stagger(150)
-            }, '-=1200')
-            .add({
-                targets: '.letter',
-                translateY: [-20, 0],
-                opacity: [0, 1],
-                rotateZ: [-10, 0],
-                scale: [0.5, 1],
-                duration: 800,
-                delay: anime.stagger(100),
-                easing: 'easeOutBack'
-            }, '-=1000')
-            .add({
-                targets: '.hero-svg-line path',
-                strokeDashoffset: [anime.setDashoffset, 0],
-                easing: 'easeInOutSine',
-                duration: 1500,
-                delay: function (el, i) { return i * 250 },
-                direction: 'alternate',
-                loop: false
-            }, '-=1000');
-
-        // 1. Replicate: animate('.square', { rotate: 90, loop: true, ease: 'inOutExpo' })
-        anime({
-            targets: '.bg-square',
-            rotate: '+=90',
-            loop: true,
-            duration: 2000,
-            easing: 'easeInOutExpo',
-            delay: anime.stagger(200)
-        });
-
-        // 2. Replicate: animate('.shape', { x: random(-100, 100), y: random(-100, 100), rotate: random(-180, 180), duration: random(500, 1000) })
-        const animateShapes = () => {
-            anime({
-                targets: '.shape',
-                translateX: () => anime.random(-150, 150),
-                translateY: () => anime.random(-150, 150),
-                rotate: () => anime.random(-180, 180),
-                scale: () => anime.random(80, 120) / 100,
-                duration: () => anime.random(2000, 4000),
-                easing: 'easeInOutQuad',
-                complete: animateShapes
-            });
-        };
-        animateShapes();
-
-        // 3. Replicate: animate('.car', { ...createMotionPath('.circuit') })
-        const path = anime.path('.circuit-path');
-        anime({
-            targets: '.motion-car',
-            translateX: path('x'),
-            translateY: path('y'),
-            rotate: path('angle'),
-            easing: 'linear',
-            duration: 8000,
-            loop: true
-        });
-
-        // 4. Replicate: animate(createDrawable('.circuit'), { draw: '0 1' })
-        anime({
-            targets: '.circuit-path',
-            strokeDashoffset: [anime.setDashoffset, 0],
-            easing: 'easeInOutSine',
-            duration: 8000,
-            loop: true,
-            direction: 'alternate'
-        });
-
-        // 5. Replicate: ticker logic
-        anime({
-            targets: '.ticker',
-            rotate: 360,
-            duration: 8000,
-            loop: true,
-            easing: 'linear'
-        });
-
-        // 6. SVG Morphing
-        anime({
-            targets: '.morph-path',
-            d: [
-                { value: 'M 400 150 C 600 100 850 200 900 400 C 950 600 800 850 600 900 C 300 950 150 750 150 500 C 150 250 250 150 400 150 Z' },
-                { value: 'M 250 250 C 500 150 750 150 850 350 C 950 550 750 850 500 850 C 250 850 150 650 150 450 C 150 300 200 250 250 250 Z' },
-                { value: 'M 300 200 C 500 100 700 150 850 300 C 1000 500 800 800 500 900 C 200 1000 100 700 150 400 C 200 200 250 250 300 200 Z' }
-            ],
-            easing: 'easeInOutSine',
-            duration: 8000,
-            loop: true,
-            direction: 'alternate'
-        });
-
-        // 7. Media query animations
-        const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-        anime({
-            targets: '.media-circle',
-            translateY: isPortrait ? 0 : [-50, 50, -50],
-            translateX: isPortrait ? [-50, 50, -50] : 0,
-            duration: 4000,
-            delay: anime.stagger(100),
-            loop: true,
-            easing: 'easeInOutQuad'
-        });
-
-        // 8. Infinite Color Morphing for Hero Text letters
-        anime({
-            targets: '.letter',
-            color: [
-                { value: 'var(--accent-secondary)' },
-                { value: 'var(--accent-primary)' },
-                { value: '#10b981' }, // Accent green
-                { value: 'var(--accent-secondary)' }
-            ],
-            duration: 5000,
-            easing: 'linear',
-            loop: true,
-            delay: anime.stagger(200, { start: 2000 })
-        });
-
-        // 9. Floating ambient shapes continuous pulse
-        anime({
-            targets: '.shape',
-            scale: [1, 1.1, 1],
-            opacity: [0.3, 0.6, 0.3],
-            duration: 4000,
-            loop: true,
-            easing: 'easeInOutSine',
-            delay: anime.stagger(1500)
-        });
-
-        // 10. Endless floating for project icons
-        anime({
-            targets: '.project-icon',
-            translateY: [-5, 5],
-            duration: 2000,
-            direction: 'alternate',
-            loop: true,
-            easing: 'easeInOutSine',
-            delay: anime.stagger(200)
-        });
-
-        // 11. Section Dividers Wave Animation
-        anime({
-            targets: '.wave-path',
-            d: [
-                { value: 'M0,100 C150,200 350,0 500,100 C650,200 850,0 1000,100 L1000,0 L0,0 Z' },
-                { value: 'M0,100 C150,0 350,200 500,100 C650,0 850,200 1000,100 L1000,0 L0,0 Z' }
-            ],
-            duration: 5000,
-            easing: 'easeInOutSine',
-            loop: true,
-            direction: 'alternate'
-        });
-
-        // 12. Infinite Between-Section Marquees
-        anime({
-            targets: '.marquee-inner',
-            translateX: ['0%', '-50%'],
-            duration: 25000,
-            easing: 'linear',
-            loop: true
-        });
-        anime({
-            targets: '.marquee-reverse',
-            translateX: ['-50%', '0%'],
-            duration: 25000,
-            easing: 'linear',
-            loop: true
-        });
-
-    }, []);
-
-    // Scroll reveal observer
-    useEffect(() => {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    if (entry.target.classList.contains('section-anim')) {
-                        anime({
-                            targets: entry.target.querySelectorAll('.animate-item'),
-                            translateY: [40, 0],
-                            opacity: [0, 1],
-                            duration: 1000,
-                            delay: anime.stagger(100, { start: 300 }),
-                            easing: 'easeOutQuart'
-                        });
-
-                        // Specifically target skill badges for a grid-like bursting stagger if they exist in this section
-                        const skillBadges = entry.target.querySelectorAll('.skill-badge');
-                        if (skillBadges.length > 0) {
-                            anime({
-                                targets: skillBadges,
-                                scale: [0, 1],
-                                opacity: [0, 1],
-                                delay: anime.stagger(100, { grid: [5, 5], from: 'center' }),
-                                easing: 'easeOutElastic(1, .6)',
-                                duration: 1500
-                            });
-                        }
-
-                        // Animate Number Counters Counting Up
-                        const counters = entry.target.querySelectorAll('.count-up');
-                        if (counters.length > 0) {
-                            counters.forEach(counter => {
-                                const max = parseInt(counter.getAttribute('data-max'));
-                                anime({
-                                    targets: counter,
-                                    innerHTML: [0, max],
-                                    easing: 'easeOutExpo',
-                                    round: 1,
-                                    duration: 2500,
-                                    delay: 800
-                                });
-                            });
-                        }
-
-                        // Section specific deep entrance animations
-                        if (entry.target.id === 'about') {
-                            anime({
-                                targets: '.timeline',
-                                '--line-height': '100%',
-                                duration: 4000,
-                                easing: 'easeInOutQuad'
-                            });
-                            anime({
-                                targets: '.about-text p',
-                                translateX: [-50, 0],
-                                opacity: [0, 1],
-                                delay: anime.stagger(200, { start: 500 }),
-                                easing: 'easeOutExpo'
-                            });
-                            anime({
-                                targets: '.timeline-item',
-                                translateX: [50, 0],
-                                opacity: [0, 1],
-                                delay: anime.stagger(300, { start: 800 }),
-                                easing: 'easeOutElastic(1, .8)'
-                            });
-                        }
-
-                        if (entry.target.id === 'skills') {
-                            anime({
-                                targets: '.skill-category-title',
-                                scale: [0, 1],
-                                rotateX: [90, 0],
-                                opacity: [0, 1],
-                                delay: anime.stagger(200, { start: 400 }),
-                                easing: 'easeOutBack'
-                            });
-                        }
-
-                        if (entry.target.id === 'projects') {
-                            anime({
-                                targets: '.project-card',
-                                rotateY: [90, 0],
-                                rotateX: [-45, 0],
-                                translateZ: [-500, 0],
-                                opacity: [0, 1],
-                                delay: anime.stagger(150, { start: 500 }),
-                                easing: 'easeOutElastic(1, .6)',
-                                duration: 1500
-                            });
-                        }
-
-                        if (entry.target.id === 'contact') {
-                            anime({
-                                targets: '.contact-container .form-group',
-                                translateX: (el, i) => i % 2 === 0 ? [-50, 0] : [50, 0],
-                                opacity: [0, 1],
-                                delay: anime.stagger(200, { start: 600 }),
-                                easing: 'easeOutCirc'
-                            });
-                            anime({
-                                targets: '.btn-submit',
-                                scale: [0, 1],
-                                opacity: [0, 1],
-                                delay: 1200,
-                                easing: 'spring(1, 80, 10, 0)'
-                            });
-                        }
-
-                        observer.unobserve(entry.target);
-                    }
-                }
-            });
-        }, { threshold: 0.15 });
-
-        document.querySelectorAll('.section-anim').forEach(el => observer.observe(el));
-
-        // Add magnetic cursor logic globally, tracking mouse movements outside of React state for performance
-        const cursor = document.querySelector('.neon-cursor');
-        const handleMouseMove = (e) => {
-            if (cursor) {
-                cursor.style.left = e.clientX + 'px';
-                cursor.style.top = e.clientY + 'px';
-            }
-        };
-
-        window.addEventListener('mousemove', handleMouseMove);
-
-        const attachCursorHover = () => {
-            document.querySelectorAll('a, button, .dot, .timeline-dot, .project-card, .btn').forEach(el => {
-                el.addEventListener('mouseenter', () => cursor && cursor.classList.add('hovering'));
-                el.addEventListener('mouseleave', () => cursor && cursor.classList.remove('hovering'));
-            });
-        };
-        attachCursorHover();
-
-        return () => {
-            observer.disconnect();
-            window.removeEventListener('mousemove', handleMouseMove);
-        };
-    }, []);
-
-    const skillsData = [
-        {
-            category: 'Languages',
-            items: ['Java', 'Python', 'SQL']
-        },
-        {
-            category: 'Frameworks',
-            items: ['Flask', 'FastAPI', 'NumPy', 'Pandas', 'Matplotlib', 'Seaborn', 'Scikit-Learn', 'TensorFlow']
-        },
-        {
-            category: 'Tools & Platforms',
-            items: ['MySQL', 'MongoDB', 'Git & GitHub', 'VS Code', 'Docker', 'Kubernetes', 'Azure', 'Power BI']
-        },
-        {
-            category: 'AI / GenAI',
-            items: ['Hugging Face', 'LLMs', 'Agentic AI', 'APIs']
-        },
-        {
-            category: 'Soft Skills',
-            items: ['Quick Learner', 'Team Player', 'Leadership', 'Adaptability']
-        }
-    ];
-
-    const projectsData = [
-        {
-            title: 'Scalable HRMS Backend',
-            desc: 'Architected a secure, asynchronous backend using FastAPI to handle concurrent employee data operations with RBAC via Supabase.',
-            tech: ['Python', 'FastAPI', 'SQL', 'Supabase', 'Docker'],
-            link: 'https://github.com/Har-dik25',
-            icon: '🏢'
-        },
-        {
-            title: 'AI Traffic Congestion System',
-            desc: 'Developed ML models predicting traffic congestion (89% R²) by cleaning and merging 80K+ data records. Real-time forecasting via AWS.',
-            tech: ['Python', 'Flask', 'TensorFlow', 'Power BI', 'AWS'],
-            link: 'https://github.com/Har-dik25',
-            icon: '🚦'
-        },
-        {
-            title: 'Backpack Price Prediction',
-            desc: 'Ranked top 10% among 500+ participants by applying XGBoost regression to preprocess 10K+ e-commerce records.',
-            tech: ['Python', 'Scikit-Learn', 'XGBoost'],
-            link: 'https://github.com/Har-dik25',
-            icon: '🎒'
-        }
-    ];
-
-    const handleProjectMouseMove = (e) => {
-        const card = e.currentTarget;
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        // Calculate rotation limits (-10 to 10 degrees)
-        const rotateX = ((y - centerY) / centerY) * -10;
-        const rotateY = ((x - centerX) / centerX) * 10;
-
-        // Dynamic glare effect calculation 
-        const glareX = (x / rect.width) * 100;
-        const glareY = (y / rect.height) * 100;
-
-        card.style.setProperty('--glare-x', `${glareX}%`);
-        card.style.setProperty('--glare-y', `${glareY}%`);
-
-        anime({
-            targets: card,
-            rotateX: rotateX,
-            rotateY: rotateY,
-            scale: 1.05,
-            duration: 100,
-            easing: 'linear'
-        });
+  useEffect(() => {
+    anime({ targets: '.nav-pill', translateY: [-28, 0], opacity: [0, 1], duration: 900, delay: 150, easing: 'easeOutExpo' });
+    const fn = () => {
+      ['home','about','project','services','contact'].reverse().some(id => {
+        const el = document.getElementById(id);
+        if (el && window.scrollY >= el.offsetTop - 140) { setActive(id); return true; }
+        return false;
+      });
     };
+    window.addEventListener('scroll', fn, { passive: true });
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
 
-    const handleProjectEnter = (e) => {
-        anime({
-            targets: e.currentTarget,
-            scale: 1.05,
-            boxShadow: '0 20px 40px -15px rgba(6, 182, 212, 0.5)',
-            duration: 400,
-            easing: 'easeOutExpo'
-        });
-    };
+  const go = id => { setMob(false); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); };
+  const links = ['home','about','project','services','contact'];
 
-    const handleProjectLeave = (e) => {
-        anime({
-            targets: e.currentTarget,
-            rotateX: 0,
-            rotateY: 0,
-            scale: 1,
-            boxShadow: '0 0px 0px 0px rgba(6, 182, 212, 0)',
-            duration: 600,
-            easing: 'easeOutElastic(1, .8)'
-        });
-    };
+  return (
+    <nav className="nav">
+      <div className="nav-pill" style={{ opacity: 0 }}>
+        <button className="nav-logo" onClick={() => go('home')}><span className="logo-dim">a</span>mine</button>
+        <ul className="nav-list">
+          {links.map(l => (
+            <li key={l}>
+              <button className={`nav-lnk${active === l ? ' nav-lnk-on' : ''}`} onClick={() => go(l)}>
+                {l.charAt(0).toUpperCase() + l.slice(1)}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="nav-ico-row">
+          <a className="nav-ico" href="https://github.com/Har-dik25"         target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg></a>
+          <a className="nav-ico" href="https://instagram.com"                target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/></svg></a>
+          <a className="nav-ico" href="https://www.linkedin.com/in/hardik8/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+        </div>
+        <button className="nav-burger" onClick={() => setMob(o => !o)}>
+          <span className={mob ? 'x' : ''}/><span className={mob ? 'x' : ''}/>
+        </button>
+      </div>
+      {mob && (
+        <div className="nav-mob">
+          {links.map(l => <button key={l} className="nm-lnk" onClick={() => go(l)}>{l.charAt(0).toUpperCase()+l.slice(1)}</button>)}
+        </div>
+      )}
+    </nav>
+  );
+};
 
-    const handleInputFocus = (e) => {
-        anime({
-            targets: e.target,
-            scale: 1.02,
-            boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
-            borderColor: 'var(--accent-primary)',
-            duration: 300,
-            easing: 'easeOutCubic'
-        });
-    };
+/* ─────────────────────────────────────────────────────────────
+   REVEAL HOOK
+───────────────────────────────────────────────────────────── */
+const useReveal = (t = 0.1) => {
+  const ref = useRef(null);
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setV(true); obs.disconnect(); } }, { threshold: t });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, v];
+};
 
-    const handleInputBlur = (e) => {
-        anime({
-            targets: e.target,
-            scale: 1,
-            boxShadow: '0 0 0px rgba(124, 58, 237, 0)',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            duration: 200,
-            easing: 'easeInCubic'
-        });
-    };
+/* ─────────────────────────────────────────────────────────────
+   ABOUT SECTION
+───────────────────────────────────────────────────────────── */
+const About = () => {
+  const [ref, v] = useReveal(0.08);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const btn = e.target.querySelector('button');
-        anime({
-            targets: btn,
-            scale: [1, 0.9, 1.1, 1],
-            backgroundColor: ['#7c3aed', '#06b6d4', '#10b981'],
-            duration: 1000,
-            easing: 'easeInOutQuad',
-            complete: () => {
-                btn.innerHTML = 'Message Sent! ✓';
-                setTimeout(() => {
-                    btn.innerHTML = 'Send Message';
-                    btn.style.backgroundColor = '';
-                }, 3000);
-            }
-        });
-    };
+  useEffect(() => {
+    if (!v) return;
+    anime({ targets: '.ab-title', translateY: [40,0], opacity:[0,1], duration:800, easing:'easeOutExpo' });
+    anime({ targets: '.ab-line',  scaleX:[0,1],      opacity:[0,1], duration:600, delay:200, easing:'easeOutExpo' });
+    anime({ targets: '.ab-card',  translateX:[-60,0], opacity:[0,1], duration:900, delay:250, easing:'easeOutExpo' });
+    anime({ targets: '.ab-right', translateX:[60,0],  opacity:[0,1], duration:900, delay:350, easing:'easeOutExpo' });
+    anime({ targets: '.ab-stat',  scale:[0.6,1], opacity:[0,1], delay: anime.stagger(80,{start:600,from:'center'}), easing:'easeOutElastic(1,.7)', duration:900 });
+    document.querySelectorAll('.count-n').forEach(el => {
+      anime({ targets:el, innerHTML:[0,+el.dataset.v], round:1, duration:2000, delay:700, easing:'easeOutExpo' });
+    });
+  }, [v]);
 
-    const handleButtonEnter = (e) => {
-        anime({ targets: e.target, scale: 1.05, duration: 300, easing: 'easeOutExpo' });
-    };
+  return (
+    <section id="about" className="about-sec" ref={ref}>
+      {/* "About Me" heading with line below — from screenshot */}
+      <div className="ab-header">
+        <h2 className="sec-title ab-title" style={{opacity:0}}>About Me</h2>
+        <div className="ab-line" style={{opacity:0}} />
+      </div>
 
-    const handleButtonLeave = (e) => {
-        anime({ targets: e.target, scale: 1, duration: 600, easing: 'easeOutElastic(1, .8)' });
-    };
+      <div className="ab-grid">
+        {/* Left card with character */}
+        <div className="ab-card" style={{opacity:0}}>
+          <AnimeChar style={{filter:'none'}} />
+        </div>
 
-    const handleLogoEnter = (e) => {
-        anime({ targets: e.currentTarget, rotateZ: [-2, 2, 0], scale: 1.1, duration: 600, easing: 'easeInOutSine' });
-    };
+        {/* Right — text + stats */}
+        <div className="ab-right" style={{opacity:0}}>
+          <p className="ab-p">Hi, I'm Hardik Choudhary, a passionate Software Engineer and Computer Science student at Lovely Professional University. I enjoy building scalable backend systems, intelligent ML pipelines, and responsive web interfaces that provide a great user experience.</p>
+          <p className="ab-p">I focus on clean architecture, smooth data flows, and writing efficient code using modern web technologies. I'm always learning new tools and improving my skills to create better digital products. My goal is to combine creativity with technology to build systems that are both powerful and functional.</p>
 
-    const handleLogoLeave = (e) => {
-        anime({ targets: e.currentTarget, rotateZ: 0, scale: 1, duration: 400, easing: 'easeOutCubic' });
-    };
+          <hr className="ab-divider" />
 
-    const handleStatEnter = (e) => {
-        anime({ targets: e.currentTarget, scale: 1.05, translateY: -5, boxShadow: '0 10px 20px rgba(124, 58, 237, 0.2)', duration: 400, easing: 'easeOutExpo' });
-    };
+          <div className="ab-stats">
+            {[['9+','PROJECTS',9],[' 80+','LEETCODE',80],['5★','HACKERRANK',5],['2','ORACLE CERTS',2]].map(([disp,lbl,val],i)=>(
+              <div key={i} className="ab-stat" style={{opacity:0}}>
+                <span className="ab-stat-n">
+                  {val===80 ? <><span className="count-n" data-v="80">0</span>+</> :
+                   val===9  ? <><span className="count-n" data-v="9">0</span>+</> :
+                   val===5  ? <><span className="count-n" data-v="5">0</span>★</> :
+                   <span className="count-n" data-v="2">0</span>}
+                </span>
+                <span className="ab-stat-l">{lbl}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-    const handleStatLeave = (e) => {
-        anime({ targets: e.currentTarget, scale: 1, translateY: 0, boxShadow: '0 0px 0px rgba(124, 58, 237, 0)', duration: 600, easing: 'easeOutElastic(1, .8)' });
-    };
+      {/* Skills strip directly below about */}
+      <SkillsStrip />
+    </section>
+  );
+};
 
-    const handleNavLinkEnter = (e) => {
-        anime({ targets: e.target, translateY: -3, color: '#fff', duration: 200, easing: 'easeOutQuad' });
-    };
+/* ─────────────────────────────────────────────────────────────
+   SKILLS STRIP — inside about section, exactly like screenshot
+───────────────────────────────────────────────────────────── */
+const SkillsStrip = () => {
+  const [ref, v] = useReveal(0.15);
+  useEffect(() => {
+    if (!v) return;
+    anime({ targets: '.sk-item', translateY:[28,0], opacity:[0,1], delay: anime.stagger(55,{start:100}), easing:'easeOutExpo', duration:600 });
+  }, [v]);
 
-    const handleNavLinkLeave = (e) => {
-        anime({ targets: e.target, translateY: 0, color: 'var(--text-secondary)', duration: 300, easing: 'easeOutQuad' });
-    };
+  const skills = [
+    {cls:'devicon-python-plain',        lbl:'PYTHON'},
+    {cls:'devicon-react-original',      lbl:'REACT'},
+    {cls:'devicon-javascript-plain',    lbl:'JS'},
+    {cls:'devicon-mysql-plain',         lbl:'MYSQL'},
+    {cls:'devicon-fastapi-plain',       lbl:'FASTAPI'},
+    {cls:'devicon-nodejs-plain',        lbl:'NODE.JS'},
+    {cls:'devicon-tensorflow-original', lbl:'TF'},
+    {cls:'devicon-mongodb-plain',       lbl:'MONGODB'},
+    {cls:'devicon-docker-plain',        lbl:'DOCKER'},
+    {cls:'devicon-git-plain',           lbl:'GIT'},
+  ];
 
-    const handleSkillEnter = (e) => {
-        anime({ targets: e.currentTarget, scale: 1.1, translateY: -5, rotateZ: () => anime.random(-3, 3), boxShadow: '0 10px 20px rgba(6, 182, 212, 0.4)', borderColor: 'var(--accent-secondary)', color: '#fff', duration: 400, easing: 'easeOutExpo' });
-    };
+  return (
+    <div className="skills-strip" ref={ref}>
+      {skills.map((s,i) => (
+        <div key={i} className="sk-item" style={{opacity:0}}
+          onMouseEnter={e => anime({targets:e.currentTarget, scale:1.3, translateY:-8, duration:220, easing:'easeOutBack'})}
+          onMouseLeave={e => anime({targets:e.currentTarget, scale:1, translateY:0, duration:320, easing:'easeOutElastic(1,.5)'})}>
+          <i className={s.cls} />
+          <span>{s.lbl}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
-    const handleSkillLeave = (e) => {
-        anime({ targets: e.currentTarget, scale: 1, translateY: 0, rotateZ: 0, boxShadow: '0 0px 0px rgba(6, 182, 212, 0)', borderColor: 'rgba(255, 255, 255, 0.1)', color: 'var(--text-secondary)', duration: 600, easing: 'easeOutElastic(1, .8)' });
-    };
+/* ─────────────────────────────────────────────────────────────
+   PROJECTS — light gray bg, 3-col white cards
+───────────────────────────────────────────────────────────── */
+const Projects = () => {
+  const [ref, v] = useReveal(0.05);
+  useEffect(() => {
+    if (!v) return;
+    anime({ targets:'.proj-title-h', translateY:[30,0], opacity:[0,1], duration:700, easing:'easeOutExpo' });
+    anime({ targets:'.pcard', translateY:[50,0], opacity:[0,1], delay:anime.stagger(80,{start:300}), easing:'easeOutExpo', duration:800 });
+  }, [v]);
 
-    const scrambleText = (e) => {
-        const el = e.target;
-        if (el.dataset.scrambling === 'true') return;
-        el.dataset.scrambling = 'true';
-        const originalText = el.dataset.text || el.innerText;
-        el.dataset.text = originalText;
-        const chars = '!<>-_\\/[]{}—=+*^?#________';
-        const length = originalText.length;
+  const hov = e => anime({targets:e.currentTarget, translateY:-6, boxShadow:'0 16px 40px rgba(0,0,0,.13)', duration:280, easing:'easeOutExpo'});
+  const out = e => anime({targets:e.currentTarget, translateY:0,  boxShadow:'0 2px 10px rgba(0,0,0,.07)',  duration:350, easing:'easeOutElastic(1,.6)'});
 
-        anime({
-            targets: { step: 0 },
-            step: length,
-            round: 1,
-            easing: 'linear',
-            duration: 800,
-            update: function (anim) {
-                let scrambled = '';
-                for (let i = 0; i < length; i++) {
-                    if (i < anim.animations[0].currentValue) {
-                        scrambled += originalText[i];
-                    } else {
-                        scrambled += chars[Math.floor(Math.random() * chars.length)];
-                    }
-                }
-                el.innerText = scrambled;
-            },
-            complete: () => { el.dataset.scrambling = 'false'; el.innerText = originalText; }
-        });
-    };
+  const projects = [
+    {t:'Scalable HRMS System',   d:'FastAPI backend with RBAC, Supabase auth and concurrent employee data ops.',                                  tech:['Python','FastAPI','Docker'],        bg:'linear-gradient(135deg,#1e1e2e,#2d2d44)', gh:'https://github.com/Har-dik25/hrms-backend', live:'https://github.com/Har-dik25/hrms-backend'},
+    {t:'AI Traffic Predictor',   d:'89% R² ML pipeline on 80K+ records with real-time forecasting via AWS Lambda.',                              tech:['TensorFlow','Flask','AWS'],          bg:'linear-gradient(135deg,#0f2027,#2c5364)', gh:'https://github.com/Har-dik25/AI-Traffic-Congestion-Analysis', live:'https://github.com/Har-dik25/AI-Traffic-Congestion-Analysis'},
+    {t:'LegalMind RAG',          d:'AI legal assistant built on RAG pipeline with vector search and LLM APIs.',                                   tech:['Python','LLMs','RAG'],               bg:'linear-gradient(135deg,#1a1a2e,#0f3460)', gh:'https://github.com/Har-dik25/LegalMindRag', live:'https://github.com/Har-dik25/LegalMindRag'},
+    {t:'GenAI Demystifier',      d:'Multi-model agent that analyzes and breaks down technical documents using GenAI.',                            tech:['GenAI','LLMs','NLP'],                bg:'linear-gradient(135deg,#2d1b69,#11998e)', gh:'https://github.com/JXPJXT/GoogleGenAiExchange-GenAI-Document-Demistifier', live:'https://github.com/JXPJXT/GoogleGenAiExchange-GenAI-Document-Demistifier'},
+    {t:'Backpack Price ML',      d:'XGBoost regression — Top 10% among 500+ Kaggle participants.',                                               tech:['Python','XGBoost','Sklearn'],        bg:'linear-gradient(135deg,#1e3c72,#2a5298)', gh:'https://github.com/JXPJXT/Kaggle-Backpack-Prediction-Challenge', live:'https://github.com/JXPJXT/Kaggle-Backpack-Prediction-Challenge'},
+    {t:'UMS Replica',            d:'Full-stack University Management System with portals, courses and admin dashboards.',                         tech:['React','Node.js','SQL'],             bg:'linear-gradient(135deg,#232526,#414345)', gh:'https://github.com/Har-dik25/UMS-replica', live:'https://github.com/Har-dik25/UMS-replica'},
+    {t:'OCR Doc Pipeline',       d:'High-accuracy OCR system for document-to-JSON extraction, streamlining physical data digitisation.',          tech:['Python','Tesseract'],               bg:'linear-gradient(135deg,#16213e,#1a1a2e)', gh:'https://github.com/Har-dik25/OCR-DOCS', live:'https://github.com/Har-dik25/OCR-DOCS'},
+    {t:'Solar Forecasting',      d:'Ensemble ML for renewable solar energy generation forecasting from raw sensor and weather data.',              tech:['Python','ML','Data Science'],       bg:'linear-gradient(135deg,#1a472a,#2d6a4f)', gh:'https://github.com/LeviAckermanZ9/solar-power-generation-forecasting', live:'https://github.com/LeviAckermanZ9/solar-power-generation-forecasting'},
+    {t:'Loan Data Analysis',     d:'Deep EDA with feature importance mapping and financial risk visualisation for lending models.',                tech:['Pandas','Seaborn','Python'],        bg:'linear-gradient(135deg,#3d0c02,#6b1a10)', gh:'https://github.com/rashmisahray/Loan-data-analysis', live:'https://github.com/rashmisahray/Loan-data-analysis'},
+  ];
 
-    useEffect(() => {
-        const explosionChars = ['✦', '★', '✺', '✶', '✷', '✸', '✹', '❀'];
-        const handleClick = (e) => {
-            // Do not explode on input fields to avoid annoyance typing
-            if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
-
-            for (let i = 0; i < 12; i++) {
-                const p = document.createElement('div');
-                document.body.appendChild(p);
-                p.innerText = explosionChars[Math.floor(Math.random() * explosionChars.length)];
-                p.style.position = 'fixed';
-                p.style.left = e.clientX + 'px';
-                p.style.top = e.clientY + 'px';
-                p.style.color = Math.random() > 0.5 ? 'var(--accent-secondary)' : 'var(--accent-primary)';
-                p.style.pointerEvents = 'none';
-                p.style.zIndex = 99999;
-
-                anime({
-                    targets: p,
-                    translateX: () => anime.random(-150, 150),
-                    translateY: () => anime.random(-150, 150),
-                    scale: [1, 0],
-                    opacity: [1, 0],
-                    rotateZ: () => anime.random(-360, 360),
-                    duration: () => anime.random(800, 1500),
-                    easing: 'easeOutExpo',
-                    complete: () => p.remove()
-                });
-            }
-        };
-        window.addEventListener('click', handleClick);
-        return () => window.removeEventListener('click', handleClick);
-    }, []);
-
-    const handleDotEnter = (e) => {
-        anime({ targets: e.target, scale: 1.5, duration: 300, easing: 'easeOutExpo' });
-    };
-
-    const handleDotLeave = (e) => {
-        anime({ targets: e.target, scale: 1, duration: 1000, easing: 'spring(1, 120, 6, 0)' });
-    };
-
-    const handleNavClick = (e, targetId) => {
-        e.preventDefault();
-        const element = document.getElementById(targetId);
-        if (element) {
-            window.scrollTo({
-                top: element.offsetTop - 80,
-                behavior: 'smooth'
-            });
-        }
-    };
-
-    return (
-        <>
-            {/* Scroll Progress Bar Top */}
-            <div className="scroll-progress-bar" style={{ position: 'fixed', top: 0, left: 0, height: '3px', background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))', width: `${scrollProgress}%`, zIndex: 10000, transition: 'width 0.1s ease-out', boxShadow: '0 0 10px var(--accent-secondary)' }}></div>
-
-            <div className="neon-cursor"></div>
-            {/* Ambient Background Shapes and Active Ripple Grid */}
-            <AnimeGridBackground />
-            <div className="media-circle" style={{ position: 'fixed', bottom: '10%', left: '5%', width: 20, height: 20, background: 'var(--accent-primary)', borderRadius: '50%', opacity: 0.6, zIndex: 0 }}></div>
-            <div className="media-circle" style={{ position: 'fixed', bottom: '15%', left: '8%', width: 15, height: 15, background: 'var(--accent-secondary)', borderRadius: '50%', opacity: 0.6, zIndex: 0 }}></div>
-
-            {/* Morphing SVG Blob */}
-            <svg
-                className="morph-svg"
-                style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '100vmin', height: '100vmin', pointerEvents: 'none', zIndex: -1, opacity: 0.05 }}
-                viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice"
-            >
-                <path className="morph-path" d="M 300 200 C 500 100 700 150 850 300 C 1000 500 800 800 500 900 C 200 1000 100 700 150 400 C 200 200 250 250 300 200 Z" fill="var(--accent-primary)" />
-            </svg>
-
-            {/* Circuit Motion Path Element */}
-            <svg
-                style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }}
-                viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice"
-            >
-                <path className="circuit-path" d="M -100 200 L 200 200 L 300 400 L 700 400 L 800 600 L 1100 600" fill="none" stroke="rgba(6, 182, 212, 0.15)" strokeWidth="3" />
-            </svg>
-            <div className="motion-car" style={{ position: 'fixed', top: -10, left: -10, width: 20, height: 20, background: 'var(--accent-secondary)', borderRadius: '50%', boxShadow: '0 0 15px var(--accent-secondary)', zIndex: 1, pointerEvents: 'none' }}></div>
-
-            <div className="bg-square square-1" style={{ position: 'fixed', top: '20%', left: '10%', width: 50, height: 50, border: '2px solid rgba(124, 58, 237, 0.2)', zIndex: 0 }}></div>
-            <div className="bg-square square-2" style={{ position: 'fixed', top: '70%', right: '15%', width: 70, height: 70, border: '2px solid rgba(6, 182, 212, 0.2)', zIndex: 0 }}></div>
-
-            <div className="ticker" style={{ position: 'fixed', top: '10%', right: '10%', width: 40, height: 40, borderTop: '4px solid var(--accent-primary)', borderRight: '4px solid var(--accent-secondary)', borderRadius: '50%', zIndex: 0, opacity: 0.5 }}></div>
-
-            <div className="floating-shapes">
-                <div className="shape shape-1"></div>
-                <div className="shape shape-2"></div>
+  return (
+    <section id="project" className="proj-sec" ref={ref}>
+      <h2 className="sec-title proj-title-h" style={{opacity:0}}>Project</h2>
+      <div className="sec-underline" />
+      <div className="proj-grid">
+        {projects.map((p,i) => (
+          <div key={i} className="pcard" style={{opacity:0}} onMouseEnter={hov} onMouseLeave={out}>
+            {/* Gradient preview image */}
+            <div className="pcard-img" style={{background:p.bg}}>
+              <span className="pcard-img-txt">{p.t}</span>
             </div>
-
-            {/* Navigation */}
-            <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-                <div className="container nav-content">
-                    <a href="#home" className="logo" onClick={(e) => handleNavClick(e, 'home')} onMouseEnter={handleLogoEnter} onMouseLeave={handleLogoLeave}>
-                        hardik<span className="text-accent-gradient">.dev</span>
-                    </a>
-                    <div className="nav-links">
-                        <a href="#about" className="nav-link" onClick={(e) => handleNavClick(e, 'about')} onMouseEnter={handleNavLinkEnter} onMouseLeave={handleNavLinkLeave}>About</a>
-                        <a href="#skills" className="nav-link" onClick={(e) => handleNavClick(e, 'skills')} onMouseEnter={handleNavLinkEnter} onMouseLeave={handleNavLinkLeave}>Skills</a>
-                        <a href="#projects" className="nav-link" onClick={(e) => handleNavClick(e, 'projects')} onMouseEnter={handleNavLinkEnter} onMouseLeave={handleNavLinkLeave}>Projects</a>
-                        <a href="#contact" className="nav-link" onClick={(e) => handleNavClick(e, 'contact')} onMouseEnter={handleNavLinkEnter} onMouseLeave={handleNavLinkLeave}>Contact</a>
-                    </div>
-                </div>
-            </nav>
-
-            <main>
-                {/* Hero Section */}
-                <section id="home" className="hero">
-                    <div className="container">
-                        <div className="hero-content">
-                            <span className="hero-subtitle hero-anim">Welcome</span>
-                            <h1 className="heading-display hero-anim" style={{ position: 'relative' }}>
-                                Hi, I'm <span style={{ display: 'inline-block', paddingLeft: '8px' }}>
-                                    {'Hardik'.split('').map((char, i) => (
-                                        <span key={i} className="letter" style={{ display: 'inline-block', color: 'var(--accent-secondary)', minWidth: char === ' ' ? '1rem' : 'auto' }}>{char}</span>
-                                    ))}
-                                </span>.
-                                <svg className="hero-svg-line" width="300" height="80" viewBox="0 0 300 80" style={{ position: 'absolute', bottom: '-40px', left: '50%', transform: 'translateX(-50%)', overflow: 'visible', pointerEvents: 'none' }}>
-                                    <path className="neon-stroke" d="M 0 40 Q 75 60 150 40 T 300 40" fill="transparent" stroke="var(--accent-secondary)" strokeWidth="4" strokeLinecap="round" strokeDasharray="350" strokeDashoffset="350" />
-                                </svg>
-                            </h1>
-                            <p className="hero-desc hero-anim mt-4">
-                                I'm a software engineer specializing in scalable backend architectures and processing complex data into actionable insights using Machine Learning. Let's build something exceptional.
-                            </p>
-                            <div className="hero-cta hero-anim">
-                                <a href="#projects" className="btn btn-primary" onClick={(e) => handleNavClick(e, 'projects')} onMouseEnter={handleButtonEnter} onMouseLeave={handleButtonLeave}>View My Work</a>
-                                <a href="#contact" className="btn btn-secondary" onClick={(e) => handleNavClick(e, 'contact')} onMouseEnter={handleButtonEnter} onMouseLeave={handleButtonLeave}>Get In Touch</a>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* About & Experience Section */}
-                <section id="about" className="section-anim" style={{ position: 'relative', marginTop: '150px' }}>
-                    <div style={{ position: 'absolute', top: '-130px', width: '100%', overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: -1 }}>
-                        <div className="marquee-inner text-accent-gradient" style={{ display: 'inline-block', width: '200%', fontSize: '5rem', fontWeight: 800, opacity: 0.15 }}>
-                            IDEATE · INNOVATE · EXECUTE · IDEATE · INNOVATE · EXECUTE · IDEATE · INNOVATE · EXECUTE · IDEATE · INNOVATE · EXECUTE ·
-                        </div>
-                    </div>
-                    <svg style={{ position: 'absolute', top: '-100px', left: 0, width: '100%', height: '100px', pointerEvents: 'none' }} viewBox="0 0 1000 100" preserveAspectRatio="none">
-                        <path className="wave-path" d="M0,100 C150,200 350,0 500,100 C650,200 850,0 1000,100 L1000,0 L0,0 Z" fill="rgba(124, 58, 237, 0.15)" stroke="var(--accent-primary)" strokeWidth="2" />
-                    </svg>
-                    <div className="container">
-                        <h2 className="heading-section animate-item" onMouseEnter={scrambleText} style={{ cursor: 'crosshair' }}>
-                            Journey & Insights
-                        </h2>
-
-                        <div className="about-grid">
-                            <div className="about-text animate-item">
-                                <h3 className="timeline-title mb-4">Who I Am</h3>
-                                <p>
-                                    I am driven by creating innovative solutions that sit at the intersection of robust backend engineering and advanced machine learning models.
-                                </p>
-                                <p>
-                                    My goal is to abstract the complexity out of data architecture, giving users seamless, intelligent digital experiences.
-                                </p>
-
-                                <div className="about-stats mt-4">
-                                    <div className="stat-box" onMouseEnter={handleStatEnter} onMouseLeave={handleStatLeave}>
-                                        <div className="stat-num text-accent-gradient"><span className="count-up" data-max="80">0</span>+</div>
-                                        <div className="stat-label">LeetCode Solved</div>
-                                    </div>
-                                    <div className="stat-box" onMouseEnter={handleStatEnter} onMouseLeave={handleStatLeave}>
-                                        <div className="stat-num text-accent-gradient"><span className="count-up" data-max="5">0</span>★</div>
-                                        <div className="stat-label">HackerRank Py/SQL</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="timeline animate-item">
-                                <div className="timeline-item">
-                                    <div className="timeline-dot" onMouseEnter={handleDotEnter} onMouseLeave={handleDotLeave}></div>
-                                    <div className="timeline-content">
-                                        <span className="timeline-date">Jun 2025 - Aug 2025</span>
-                                        <h3 className="timeline-title">Data Analyst Intern</h3>
-                                        <div className="timeline-company">Futurense Technologies</div>
-                                        <p className="timeline-desc">Cleaned 30K+ records improving accuracy by 15%, performed EDA accelerating decisions by 20%, and built automated Power BI tracking dashboards.</p>
-                                    </div>
-                                </div>
-                                <div className="timeline-item">
-                                    <div className="timeline-dot" onMouseEnter={handleDotEnter} onMouseLeave={handleDotLeave}></div>
-                                    <div className="timeline-content">
-                                        <span className="timeline-date">Since Aug 2023</span>
-                                        <h3 className="timeline-title">B.Tech - Computer Science</h3>
-                                        <div className="timeline-company">Lovely Professional University</div>
-                                        <p className="timeline-desc">CGPA: 6.9. Focusing on advanced computing constructs, AI methodologies, and intelligent systems design.</p>
-                                    </div>
-                                </div>
-                                <div className="timeline-item">
-                                    <div className="timeline-dot" onMouseEnter={handleDotEnter} onMouseLeave={handleDotLeave}></div>
-                                    <div className="timeline-content">
-                                        <span className="timeline-date">Sep 2025</span>
-                                        <h3 className="timeline-title">OCI AI & Data Science</h3>
-                                        <div className="timeline-company">Oracle Certifications</div>
-                                        <p className="timeline-desc">Certified Generative AI Professional & Certified Data Science Professional.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Skills Section */}
-                <section id="skills" className="section-anim" style={{ position: 'relative', marginTop: '150px' }}>
-                    <div style={{ position: 'absolute', top: '-130px', width: '100%', overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: -1 }}>
-                        <div className="marquee-reverse" style={{ display: 'inline-block', width: '200%', fontSize: '5rem', fontWeight: 800, color: 'transparent', WebkitTextStroke: '2px var(--accent-secondary)', opacity: 0.25 }}>
-                            SOFTWARE ENGINEERING · MACHINE LEARNING · DATA SCIENCE · SOFTWARE ENGINEERING · MACHINE LEARNING · DATA SCIENCE ·
-                        </div>
-                    </div>
-                    <svg style={{ position: 'absolute', top: '-100px', left: 0, width: '100%', height: '100px', pointerEvents: 'none', transform: 'scaleX(-1)' }} viewBox="0 0 1000 100" preserveAspectRatio="none">
-                        <path className="wave-path" d="M0,100 C150,200 350,0 500,100 C650,200 850,0 1000,100 L1000,0 L0,0 Z" fill="rgba(6, 182, 212, 0.15)" stroke="var(--accent-secondary)" strokeWidth="2" />
-                    </svg>
-                    <div className="container">
-                        <h2 className="heading-section animate-item" onMouseEnter={scrambleText} style={{ cursor: 'crosshair' }}>
-                            Technical Arsenal
-                        </h2>
-                        <div className="skills-container">
-                            {skillsData.map((category, idx) => (
-                                <div key={idx} className="skill-category animate-item">
-                                    <h3 className="skill-category-title">{category.category}</h3>
-                                    <div className="skill-items">
-                                        {category.items.map((item, i) => (
-                                            <div key={i} className="skill-badge" onMouseEnter={handleSkillEnter} onMouseLeave={handleSkillLeave}>
-                                                <span>{item}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Projects Section */}
-                <section id="projects" className="section-anim" style={{ position: 'relative', marginTop: '150px' }}>
-                    <div style={{ position: 'absolute', top: '-130px', width: '100%', overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: -1 }}>
-                        <div className="marquee-inner text-accent-gradient" style={{ display: 'inline-block', width: '200%', fontSize: '5rem', fontWeight: 800, opacity: 0.15 }}>
-                            BUILDING THE FUTURE · BUILDING THE FUTURE · BUILDING THE FUTURE · BUILDING THE FUTURE · BUILDING THE FUTURE ·
-                        </div>
-                    </div>
-                    <svg style={{ position: 'absolute', top: '-100px', left: 0, width: '100%', height: '100px', pointerEvents: 'none' }} viewBox="0 0 1000 100" preserveAspectRatio="none">
-                        <path className="wave-path" d="M0,100 C150,200 350,0 500,100 C650,200 850,0 1000,100 L1000,0 L0,0 Z" fill="rgba(124, 58, 237, 0.15)" stroke="var(--accent-primary)" strokeWidth="2" />
-                    </svg>
-                    <div className="container">
-                        <h2 className="heading-section animate-item" onMouseEnter={scrambleText} style={{ cursor: 'crosshair' }}>
-                            Selected Works
-                        </h2>
-                        <div className="projects-grid">
-                            {projectsData.map((proj, idx) => (
-                                <a
-                                    key={idx}
-                                    href={proj.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="project-card animate-item"
-                                    style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
-                                    onMouseEnter={handleProjectEnter}
-                                    onMouseMove={handleProjectMouseMove}
-                                    onMouseLeave={handleProjectLeave}
-                                >
-                                    <div className="project-icon" style={{ transform: 'translateZ(30px)' }}>{proj.icon}</div>
-                                    <h3 className="project-title" style={{ transform: 'translateZ(20px)' }}>{proj.title}</h3>
-                                    <p className="project-desc" style={{ transform: 'translateZ(10px)' }}>{proj.desc}</p>
-                                    <div className="project-tech" style={{ transform: 'translateZ(15px)' }}>
-                                        {proj.tech.map((t, i) => (
-                                            <span key={i} className="tech-tag" onMouseEnter={(e) => anime({ targets: e.target, scale: 1.1, duration: 200, easing: 'easeOutSine' })} onMouseLeave={(e) => anime({ targets: e.target, scale: 1, duration: 200, easing: 'easeOutSine' })}>{t}</span>
-                                        ))}
-                                    </div>
-                                </a>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Contact Section */}
-                <section id="contact" className="section-anim" style={{ position: 'relative', marginTop: '150px' }}>
-                    <div style={{ position: 'absolute', top: '-130px', width: '100%', overflow: 'hidden', whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: -1 }}>
-                        <div className="marquee-reverse" style={{ display: 'inline-block', width: '200%', fontSize: '5rem', fontWeight: 800, color: 'transparent', WebkitTextStroke: '2px var(--accent-secondary)', opacity: 0.25 }}>
-                            LET'S WORK TOGETHER · LET'S WORK TOGETHER · LET'S WORK TOGETHER · LET'S WORK TOGETHER · LET'S WORK TOGETHER ·
-                        </div>
-                    </div>
-                    <svg style={{ position: 'absolute', top: '-100px', left: 0, width: '100%', height: '100px', pointerEvents: 'none', transform: 'scaleX(-1)' }} viewBox="0 0 1000 100" preserveAspectRatio="none">
-                        <path className="wave-path" d="M0,100 C150,200 350,0 500,100 C650,200 850,0 1000,100 L1000,0 L0,0 Z" fill="rgba(6, 182, 212, 0.15)" stroke="var(--accent-secondary)" strokeWidth="2" />
-                    </svg>
-                    <div className="container">
-                        <h2 className="heading-section animate-item" onMouseEnter={scrambleText} style={{ cursor: 'crosshair' }}>
-                            Let's Connect
-                        </h2>
-                        <div className="contact-container animate-item">
-                            <form onSubmit={handleSubmit}>
-                                <div className="form-group">
-                                    <label className="form-label">Name</label>
-                                    <input type="text" className="form-control" placeholder="John Doe" required onFocus={handleInputFocus} onBlur={handleInputBlur} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Email</label>
-                                    <input type="email" className="form-control" placeholder="john@example.com" required onFocus={handleInputFocus} onBlur={handleInputBlur} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Message</label>
-                                    <textarea className="form-control" placeholder="How can I help you?" required onFocus={handleInputFocus} onBlur={handleInputBlur}></textarea>
-                                </div>
-                                <button type="submit" className="btn btn-primary btn-submit" onMouseEnter={handleButtonEnter} onMouseLeave={handleButtonLeave}>Send Message</button>
-                            </form>
-
-                            <div className="contact-links mt-4" style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap', marginTop: '2rem' }}>
-                                <a href="https://www.linkedin.com/in/hardik8/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-secondary)', textDecoration: 'none', fontWeight: 600 }}>LinkedIn</a>
-                                <a href="https://github.com/Har-dik25" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 600 }}>GitHub</a>
-                                <a href="mailto:hardikkumar2583@gmail.com" style={{ color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 600 }}>hardikkumar2583@gmail.com</a>
-                                <a href="tel:+917878600960" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontWeight: 600 }}>+91-7878600960</a>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
-
-            <footer>
-                <div className="container">
-                    <p>&copy; {new Date().getFullYear()} Hardik. All rights reserved.</p>
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>hardikkumar2583@gmail.com | +91-7878600960</p>
-                </div>
-            </footer>
-        </>
-    );
+            <div className="pcard-body">
+              <h3 className="pcard-title">{p.t}</h3>
+              <p className="pcard-desc">{p.d}</p>
+              <div className="pcard-tags">{p.tech.map(t=><span key={t} className="ptag">{t}</span>)}</div>
+              <div className="pcard-links">
+                <a href={p.gh}   target="_blank" rel="noopener noreferrer" className="plink plink-gh">GitHub</a>
+                <a href={p.live} target="_blank" rel="noopener noreferrer" className="plink plink-live">Live Demo</a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 };
 
-export default App;
+/* ─────────────────────────────────────────────────────────────
+   SERVICES — dark bg, 3 cards
+───────────────────────────────────────────────────────────── */
+const Services = () => {
+  const [ref, v] = useReveal(0.1);
+  useEffect(() => {
+    if (!v) return;
+    anime({ targets:'.svc-title-h', translateY:[30,0], opacity:[0,1], duration:700, easing:'easeOutExpo' });
+    anime({ targets:'.svc-card', translateY:[50,0], opacity:[0,1], delay:anime.stagger(130,{start:300}), easing:'easeOutExpo', duration:800 });
+  }, [v]);
+
+  const svcs = [
+    {
+      icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+      title:'Backend Development',
+      desc:'Scalable APIs and backend systems using Python, FastAPI, Flask and Node.js with database design and deployment.',
+    },
+    {
+      icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>,
+      title:'ML & Data Science',
+      desc:'End-to-end ML models for prediction, classification and NLP. EDA, feature engineering and deployment on AWS.',
+    },
+    {
+      icon:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>,
+      title:'Full Stack Apps',
+      desc:'Complete web applications from database to UI. React frontends with robust REST APIs and cloud deployment.',
+    },
+  ];
+
+  return (
+    <section id="services" className="svc-sec" ref={ref}>
+      <h2 className="sec-title svc-title-h" style={{opacity:0}}>Services</h2>
+      <div className="sec-underline" />
+      <div className="svc-grid">
+        {svcs.map((s,i) => (
+          <div key={i} className="svc-card" style={{opacity:0}}
+            onMouseEnter={e=>anime({targets:e.currentTarget,translateY:-8,duration:260,easing:'easeOutBack'})}
+            onMouseLeave={e=>anime({targets:e.currentTarget,translateY:0, duration:360,easing:'easeOutElastic(1,.5)'})}>
+            <div className="svc-icon">{s.icon}</div>
+            <h3 className="svc-name">{s.title}</h3>
+            <p className="svc-desc">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────────────
+   CONTACT — dark bg, left info + right form
+───────────────────────────────────────────────────────────── */
+const Contact = () => {
+  const [ref, v] = useReveal(0.08);
+  const [form, setForm] = useState({name:'',email:'',msg:''});
+  const [st, setSt] = useState('idle');
+
+  useEffect(() => {
+    if (!v) return;
+    anime({ targets:'.ct-title-h', translateY:[30,0], opacity:[0,1], duration:700, easing:'easeOutExpo' });
+    anime({ targets:'.ct-left',  translateX:[-50,0], opacity:[0,1], duration:900, delay:200, easing:'easeOutExpo' });
+    anime({ targets:'.ct-right', translateX:[50,0],  opacity:[0,1], duration:900, delay:300, easing:'easeOutExpo' });
+  }, [v]);
+
+  const submit = async e => {
+    e.preventDefault(); setSt('sending');
+    await new Promise(r=>setTimeout(r,1200)); setSt('sent');
+    setTimeout(()=>{ setSt('idle'); setForm({name:'',email:'',msg:''}); },3500);
+  };
+
+  return (
+    <section id="contact" className="ct-sec" ref={ref}>
+      <h2 className="sec-title ct-title-h" style={{opacity:0}}>Contact Me</h2>
+      <div className="sec-underline" />
+
+      <div className="ct-grid">
+        <div className="ct-left" style={{opacity:0}}>
+          <h3 className="ct-sub">Get In Touch</h3>
+          <p className="ct-body">Feel free to reach out about new projects, opportunities, or just to say hi. I'll get back to you as soon as possible.</p>
+          <div className="ct-infos">
+            {[
+              {svg:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>, txt:'hardikkumar2583@gmail.com'},
+              {svg:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.26h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9a16 16 0 0 0 6.29 6.29l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>, txt:'+91-7878600960'},
+              {svg:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>, txt:'India'},
+            ].map((item,i)=>(
+              <div key={i} className="ct-info">
+                <span className="ct-info-ico">{item.svg}</span>
+                <span>{item.txt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ct-right" style={{opacity:0}}>
+          <form onSubmit={submit} noValidate>
+            <input className="ct-inp" type="text"  placeholder="Your Name"    required value={form.name} onChange={e=>setForm(s=>({...s,name:e.target.value}))}/>
+            <input className="ct-inp" type="email" placeholder="Your Email"   required value={form.email} onChange={e=>setForm(s=>({...s,email:e.target.value}))}/>
+            <textarea className="ct-inp ct-ta"     placeholder="Your Message" required value={form.msg} onChange={e=>setForm(s=>({...s,msg:e.target.value}))}/>
+            <button type="submit" className="ct-btn" disabled={st==='sending'}>
+              {st==='idle'?'Send Message':st==='sending'?'Sending…':'Sent ✓'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────────────────────────── */
+const Footer = () => (
+  <footer className="footer">
+    <div className="footer-in">
+      <span>© 2026 Hardik Choudhary. All rights reserved.</span>
+      <div className="ft-icons">
+        {[
+          {h:'https://github.com/Har-dik25',        s:<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>},
+          {h:'https://www.linkedin.com/in/hardik8/', s:<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>},
+          {h:'mailto:hardikkumar2583@gmail.com',    s:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 7L2 7"/></svg>},
+        ].map((ico,i)=>(
+          <a key={i} href={ico.h} target="_blank" rel="noopener noreferrer" className="ft-ico">{ico.s}</a>
+        ))}
+      </div>
+    </div>
+  </footer>
+);
+
+/* ─────────────────────────────────────────────────────────────
+   APP
+───────────────────────────────────────────────────────────── */
+export default function App() {
+  return (
+    <div className="app">
+      <Nav />
+      <Hero />
+      <About />
+      <Projects />
+      <Services />
+      <Contact />
+      <Footer />
+    </div>
+  );
+}
